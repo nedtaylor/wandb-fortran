@@ -1,0 +1,42 @@
+name = "wandb-fortran"
+version = "0.1.0"
+license = "MIT"
+author = "Ned Thaddeus Taylor"
+maintainer = "n.t.taylor@exeter.ac.uk"
+description = "A standalone Fortran interface to Weights & Biases (wandb) via the Python C API"
+
+[library]
+source-dir = "src"
+
+[build]
+auto-executables = true
+auto-tests = true
+auto-examples = false
+module-naming = false
+
+[install]
+library = false
+
+[fortran]
+implicit-typing = false
+implicit-external = false
+source-form = "free"
+
+[[test]]
+name = "test_logging"
+source-dir = "test"
+main = "test_logging.f90"
+
+[[example]]
+name = "athena_logging"
+source-dir = "example/athena_logging/src"
+main = "main.f90"
+[example.dependencies]
+athena = { git = "https://github.com/nedtaylor/athena", tag = "v2.0.0" }
+
+[[example]]
+name = "neural_fortran_logging"
+source-dir = "example/neural_fortran_logging/src"
+main = "main.f90"
+[example.dependencies]
+neural-fortran = { git = "https://github.com/modern-fortran/neural-fortran" }

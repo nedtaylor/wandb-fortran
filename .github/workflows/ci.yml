@@ -1,0 +1,127 @@
+name: CI
+
+on:
+  push:
+    branches: [ main, development ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build-and-test:
+    name: Build and test (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+
+    steps:
+      # -----------------------------------------------------------------------
+      # 1. Checkout
+      # -----------------------------------------------------------------------
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # -----------------------------------------------------------------------
+      # 2. Install gfortran
+      # -----------------------------------------------------------------------
+      - name: Install gfortran (Ubuntu)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install -y gfortran python3-dev
+
+      - name: Install gfortran (macOS)
+        if: runner.os == 'macOS'
+        run: |
+          brew install gcc
+          # python3 dev headers are bundled with macOS Xcode python on GHA
+
+      # -----------------------------------------------------------------------
+      # 3. Set up Python and install wandb
+      # -----------------------------------------------------------------------
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install wandb
+        run: pip install wandb
+
+      # -----------------------------------------------------------------------
+      # 4. Install fpm
+      # -----------------------------------------------------------------------
+      - name: Install fpm
+        run: |
+          curl -sSL \
+            https://github.com/fortran-lang/fpm/releases/download/v0.12.0/fpm-0.12.0-linux-x86_64 \
+            -o /usr/local/bin/fpm-linux 2>/dev/null || true
+          # Use the pip-installed fpm as a portable fallback
+          pip install fpm || true
+          if ! command -v fpm &>/dev/null; then
+            pip install fortran-package-manager || true
+          fi
+
+      - name: Install fpm via cargo (fallback)
+        if: ${{ !contains(runner.os, 'Windows') }}
+        run: |
+          if ! command -v fpm &>/dev/null; then
+            cargo install fpm --git https://github.com/fortran-lang/fpm \
+              --branch main || true
+          fi
+          fpm --version || echo "fpm not found, trying system install"
+
+      # -----------------------------------------------------------------------
+      # 5. Configure Python flags
+      # -----------------------------------------------------------------------
+      - name: Configure Python flags for fpm
+        run: |
+          source tools/setup_env.sh
+          echo "FPM_CFLAGS=$FPM_CFLAGS"   >> "$GITHUB_ENV"
+          echo "FPM_LDFLAGS=$FPM_LDFLAGS" >> "$GITHUB_ENV"
+          if [[ -n "${DYLD_LIBRARY_PATH:-}" ]]; then
+            echo "DYLD_LIBRARY_PATH=$DYLD_LIBRARY_PATH" >> "$GITHUB_ENV"
+          fi
+        shell: bash
+
+      # -----------------------------------------------------------------------
+      # 6. Build library
+      # -----------------------------------------------------------------------
+      - name: Build library
+        run: fpm build
+
+      # -----------------------------------------------------------------------
+      # 7. Run tests (offline mode — no wandb account needed)
+      # -----------------------------------------------------------------------
+      - name: Run tests
+        env:
+          WANDB_MODE: offline
+        run: fpm test
+
+  docs:
+    name: Build documentation
+    runs-on: ubuntu-latest
+    needs: build-and-test
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install Sphinx dependencies
+        run: pip install -r docs/requirements.txt
+
+      - name: Build Sphinx docs
+        run: |
+          sphinx-build -b html docs/source docs/html
+          echo "Sphinx build complete."
+
+      - name: Upload documentation artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: html-docs
+          path: docs/html/
