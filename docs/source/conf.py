@@ -50,6 +50,16 @@ extensions = [
     'sphinx_copybutton'
 ]
 
+extlinks = {
+    'git': ('https://github.com/nedtaylor/wandb-fortran/blob/' + git_branch + '/%s', 'git: %s')
+}
+
+intersphinx_mapping = {
+    'python': ('https://docs.python.org/3/', None),
+    'sphinx': ('https://www.sphinx-doc.org/en/master/', None),
+}
+intersphinx_disabled_domains = ['std']
+
 templates_path   = ['_templates']
 exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store', 'build']
 
