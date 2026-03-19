@@ -4,7 +4,7 @@ Sweep Example
 =============
 
 This example demonstrates a wandb hyperparameter sweep driven from Fortran.
-It trains an ATHENA network to approximate sin(x), logs intermediate MSE during
+It trains an athena network to approximate sin(x), logs intermediate MSE during
 training, and reports ``final_mse`` so the sweep controller can rank runs.
 
 Source: ``example/sweep/src/main.f90``
@@ -70,7 +70,7 @@ Key code
 fpm dependency
 --------------
 
-The sweep example pulls in ATHENA automatically via fpm:
+The sweep example pulls in athena automatically via fpm:
 
 .. code-block:: toml
 

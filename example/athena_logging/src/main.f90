@@ -1,8 +1,8 @@
 program athena_logging
-  !! Demonstration of wandb logging with an ATHENA neural network training loop.
+  !! Demonstration of wandb logging with an athena neural network training loop.
   !!
   !! This example trains a small fully-connected network to approximate sin(x)
-  !! over [0, 2*pi] using the ATHENA library, while logging:
+  !! over [0, 2*pi] using the athena library, while logging:
   !!   - epoch
   !!   - training_loss
   !!   - validation_loss
@@ -63,7 +63,7 @@ program athena_logging
   call wandb_config_set("learning_rate", real(learning_rate, kind=8))
   call wandb_config_set("val_size",      val_size)
   call wandb_config_set("activation",    "tanh")
-  call wandb_config_set("framework",     "ATHENA")
+  call wandb_config_set("framework",     "athena")
 
   write(*,*) "wandb run initialised."
 

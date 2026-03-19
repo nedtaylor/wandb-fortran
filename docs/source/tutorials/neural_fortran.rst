@@ -70,5 +70,5 @@ Framework-agnostic design
 
 The only framework requirement is that you import ``wf``.  The
 ``wandb_log``, ``wandb_config_set``, and ``wandb_init`` calls are identical
-regardless of the ML library used for training — ATHENA, neural-fortran, or
+regardless of the ML library used for training — athena, neural-fortran, or
 any other Fortran framework.

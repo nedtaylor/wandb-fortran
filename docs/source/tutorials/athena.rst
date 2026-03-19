@@ -1,9 +1,9 @@
 .. _athena_example:
 
-ATHENA Example
+athena Example
 ==============
 
-This example trains an ATHENA neural network to approximate sin(x) and logs
+This example trains an athena neural network to approximate sin(x) and logs
 metrics to wandb every 10 epochs.
 
 Source: ``example/athena_logging/train_with_wandb.f90``
@@ -40,7 +40,7 @@ Key code
 
     ! training loop
     do epoch = 1, num_epochs
-       ! ... ATHENA forward / backward / update ...
+       ! ... athena forward / backward / update ...
        if (mod(epoch, 10) == 0) then
           call wandb_log("epoch",           epoch,      step=epoch)
           call wandb_log("training_loss",   train_loss, step=epoch)
@@ -55,7 +55,7 @@ Key code
 fpm dependency
 --------------
 
-The example pulls in ATHENA automatically via fpm:
+The example pulls in athena automatically via fpm:
 
 .. code-block:: toml
 
