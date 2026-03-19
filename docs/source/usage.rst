@@ -8,7 +8,7 @@ Quick start
 
 .. code-block:: fortran
 
-    use wf__wandb
+    use wf
 
     ! 1. Initialise a run
     call wandb_init(project="my-project", name="run-01")

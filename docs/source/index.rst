@@ -13,7 +13,7 @@ wandb-fortran documentation
 Overview
 --------
 
-**wandb-fortran** (``wf__wandb``) is a standalone Fortran interface to
+**wandb-fortran** (``wf``) is a standalone Fortran interface to
 `Weights & Biases <https://wandb.ai>`_ experiment tracking.
 
 It embeds the Python interpreter at runtime via the Python C API, imports

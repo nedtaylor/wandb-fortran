@@ -1,6 +1,6 @@
 module wf_c_bindings
   !! C interface declarations for the wandb-fortran library.
-  !! Internal use only — applications should use module wf__wandb.
+  !! Internal use only — applications should use module wf.
   use iso_c_binding, only: c_int, c_double, c_char
   implicit none
   private

@@ -65,7 +65,7 @@ contains
     )
 
     if(rc /= 0)then
-       write(0,*) "[wf__wandb] WARNING: wandb_init failed (rc=", rc, ")"
+       write(0,*) "[wf] WARNING: wandb_init failed (rc=", rc, ")"
        write(0,*) "  Logging will be silently skipped."
     end if
 

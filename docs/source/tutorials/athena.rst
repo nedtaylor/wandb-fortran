@@ -28,7 +28,7 @@ Key code
 .. code-block:: fortran
 
     use athena
-    use wf__wandb
+    use wf
 
     ! initialise wandb
     call wandb_init(project="wandb-fortran-athena", name="sine-demo")

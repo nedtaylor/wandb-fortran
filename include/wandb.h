@@ -6,7 +6,7 @@
  *
  * This header declares the C functions that embed the Python interpreter
  * and call wandb through the Python C API.  The Fortran module
- * `wf__wandb` binds to these symbols via iso_c_binding.
+ * `wf` binds to these symbols via iso_c_binding.
  */
 #ifndef WANDB_H
 #define WANDB_H

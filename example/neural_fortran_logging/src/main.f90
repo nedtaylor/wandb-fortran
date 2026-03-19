@@ -8,7 +8,7 @@ program neural_fortran_logging
   !!   - validation_loss
   !!   - learning_rate
   !!
-  !! This demonstrates that wf__wandb works independently of the ML framework.
+  !! This demonstrates that wf works independently of the ML framework.
   !!
   !! ## Prerequisites
   !!

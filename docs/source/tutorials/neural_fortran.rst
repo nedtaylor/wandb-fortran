@@ -1,7 +1,7 @@
 neural-fortran Example
 ======================
 
-This example shows that ``wf__wandb`` is completely independent of the ML
+This example shows that ``wf`` is completely independent of the ML
 framework.  It uses `neural-fortran <https://github.com/modern-fortran/neural-fortran>`_
 to train the same sin(x) approximation and logs identical metrics.
 
@@ -29,7 +29,7 @@ Key code
 .. code-block:: fortran
 
     use neural
-    use wf__wandb
+    use wf
 
     ! initialise wandb
     call wandb_init(project="wandb-fortran-nf", name="sine-neural-fortran")
@@ -66,7 +66,7 @@ fpm dependency
 Framework-agnostic design
 --------------------------
 
-The only framework requirement is that you import ``wf__wandb``.  The
+The only framework requirement is that you import ``wf``.  The
 ``wandb_log``, ``wandb_config_set``, and ``wandb_init`` calls are identical
 regardless of the ML library used for training — ATHENA, neural-fortran, or
 any other Fortran framework.

@@ -105,7 +105,7 @@ contains
     )
 
     if(rc /= 0)then
-       write(0,*) "[wf__wandb] WARNING: wandb_sweep failed (rc=", rc, ")"
+       write(0,*) "[wf] WARNING: wandb_sweep failed (rc=", rc, ")"
        sweep_id = ' '
        return
     end if
@@ -180,7 +180,7 @@ contains
     )
 
     if(rc /= 0)then
-       write(0,*) "[wf__wandb] WARNING: wandb_agent failed (rc=", rc, ")"
+       write(0,*) "[wf] WARNING: wandb_agent failed (rc=", rc, ")"
     end if
 
   end subroutine wandb_agent
@@ -226,7 +226,7 @@ contains
     )
 
     if(rc /= 0)then
-       write(0,*) "[wf__wandb] WARNING: wandb_sweep_start_agent failed (rc=", rc, ")"
+       write(0,*) "[wf] WARNING: wandb_sweep_start_agent failed (rc=", rc, ")"
     end if
 
   end subroutine wandb_sweep_start_agent
@@ -256,7 +256,7 @@ contains
     ok = wandb_sweep_params_c(c_buf, int(4096, c_int), tval)
 
     if(ok == 0_c_int)then
-       write(0,*) "[wf__wandb] WARNING: wandb_sweep_next_params timed out."
+       write(0,*) "[wf] WARNING: wandb_sweep_next_params timed out."
        params_json = '{}'
        return
     end if
