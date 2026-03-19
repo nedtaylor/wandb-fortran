@@ -2,7 +2,6 @@
 [![Documentation Status](https://readthedocs.org/projects/athena/badge/?version=latest)](https://wandb-fortran.readthedocs.io/en/latest/?badge=latest "athena ReadTheDocs")
 [![FPM](https://img.shields.io/badge/fpm-0.12.0-purple)](https://github.com/fortran-lang/fpm "View Fortran Package Manager")
 [![GCC compatibility](https://img.shields.io/badge/gcc-15.2.0-green)](https://gcc.gnu.org/gcc-13/ "View GCC")
-[![Coverage](https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/nedtaylor/fd7c07c046ecc92d92eaf7bdcb78c4b5/raw/test.json)](https://nedtaylor.github.io/athena/ "View coverage report")
 
 # wandb-fortran
 
