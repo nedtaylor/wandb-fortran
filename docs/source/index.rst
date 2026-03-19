@@ -7,7 +7,7 @@ wandb-fortran documentation
 
    install
    usage
-   tutorials
+   tutorials/tutorials
    api
 
 Overview

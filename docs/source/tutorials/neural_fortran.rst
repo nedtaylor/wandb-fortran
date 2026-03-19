@@ -1,3 +1,5 @@
+.. _neural_fortran_example:
+
 neural-fortran Example
 ======================
 

@@ -1,3 +1,5 @@
+.. _athena_example:
+
 ATHENA Example
 ==============
 
