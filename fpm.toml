@@ -42,6 +42,14 @@ main = "main.f90"
 neural-fortran = { git = "https://github.com/modern-fortran/neural-fortran" }
 
 [[example]]
+name = "fiats_logging"
+source-dir = "example/fiats_logging/src"
+main = "main.f90"
+[example.dependencies]
+inference-engine = { git = "https://github.com/BerkeleyLab/fiats", tag = "0.14.0" }
+julienne = { git = "https://github.com/berkeleylab/julienne", tag = "1.3.1" }
+
+[[example]]
 name = "sweep"
 source-dir = "example/sweep/src"
 main = "main.f90"

@@ -10,6 +10,7 @@ The tutorials are framework-agnostic, so you can apply the same principles
 regardless of the ML library you use — whether it's
 [athena](https://github.com/nedtaylor/athena),
 [neural-fortran](https://github.com/modern-fortran/neural-fortran),
+[fiats](https://github.com/BerkeleyLab/fiats),
 or something else.
 
 Advanced features like sweeps are also covered,
@@ -23,6 +24,7 @@ without leaving your Fortran code.
 
    athena
    neural_fortran
+   fiats
 
 .. toctree::
    :maxdepth: 1
