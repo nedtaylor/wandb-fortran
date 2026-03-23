@@ -86,6 +86,7 @@ The library has the following dependencies:
 |-------------|---------|
 | gfortran (or compatible) | ≥ 13 |
 | [fpm](https://fpm.fortran-lang.org) | ≥ 0.13 |
+| [CMake](https://cmake.org) | ≥ 3.21 |
 | Python + dev headers | ≥ 3.8 |
 | wandb Python package | ≥ 0.25 |
 
@@ -136,6 +137,34 @@ fpm build
 # or
 ./build_fpm.sh
 ```
+
+### Building and installing with CMake
+
+The repository also provides a CMake build for projects that prefer a
+traditional configure/build/install flow.
+
+```bash
+cmake -S . -B build-cmake
+cmake --build build-cmake
+ctest --test-dir build-cmake --output-on-failure
+cmake --install build-cmake --prefix "$HOME/.local"
+```
+
+This installs:
+
+- `libwandb_fortran.a` into the chosen library prefix
+- `wandb.h` into the chosen include prefix
+- the generated Fortran module files (`*.mod`) into the chosen include prefix
+
+If you want CMake to use a specific Python interpreter, pass it during
+configuration:
+
+```bash
+cmake -S . -B build-cmake \
+  -DPython3_EXECUTABLE=/path/to/python
+```
+
+The selected interpreter must have the `wandb` package installed.
 
 ### Testing with fpm an example
 

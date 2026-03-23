@@ -8,6 +8,7 @@ Prerequisites
 
 * **gfortran** >= 9  (or any Fortran 2008+ compiler)
 * **fpm** >= 0.8  — `Fortran Package Manager <https://fpm.fortran-lang.org>`_
+* **CMake** >= 3.21
 * **Python** >= 3.8 with development headers
 
   * macOS: ``brew install python3``  or  Xcode Command Line Tools
@@ -50,10 +51,13 @@ Before building you must export the Python compile and link flags so that
 When a conda environment or virtualenv is active, ``setup_env.sh`` prefers
 that environment's ``python`` automatically.
 
-This sets ``FPM_CFLAGS``, ``FPM_LDFLAGS``, and (on macOS) ``DYLD_LIBRARY_PATH``.
+This sets ``FPM_CFLAGS``, ``FPM_LDFLAGS``, and
+``DYLD_LIBRARY_PATH`` on macOS.
 
 Building
 --------
+
+With fpm:
 
 .. code-block:: bash
 
@@ -68,6 +72,35 @@ Or use the convenience script (sources ``setup_env.sh`` automatically):
     # With a specific Python interpreter
     PYTHON=/path/to/python3 ./build_fpm.sh
 
+With CMake:
+
+.. code-block:: bash
+
+    cmake -S . -B build-cmake
+    cmake --build build-cmake
+
+.. code-block:: bash
+
+    ctest --test-dir build-cmake --output-on-failure
+    cmake --install build-cmake --prefix "$HOME/.local"
+
+If you want to force a specific Python interpreter for the CMake build,
+configure with:
+
+.. code-block:: bash
+
+    cmake -S . -B build-cmake \
+      -DPython3_EXECUTABLE=/path/to/python
+
+The selected interpreter must provide both the Python development files and the
+``wandb`` package.
+
+The CMake install step places:
+
+* ``libwandb_fortran.a`` in the install library directory
+* ``wandb.h`` in the install include directory
+* generated Fortran module files (``*.mod``) in the install include directory
+
 Running tests
 -------------
 
@@ -75,6 +108,12 @@ Running tests
 
     source tools/setup_env.sh
     WANDB_MODE=offline fpm test
+
+For the CMake build:
+
+.. code-block:: bash
+
+    ctest --test-dir build-cmake --output-on-failure
 
 Using as a dependency
 ---------------------
