@@ -66,6 +66,10 @@ fi
 export FPM_CFLAGS="${FPM_CFLAGS:-} ${_WF_INCLUDES}"
 export FPM_LDFLAGS="${FPM_LDFLAGS:-} ${_WF_LDFLAGS}"
 
+# Filter out -framework flags which are not supported by flang
+# This allows the code to compile with both clang and flang
+export FPM_LDFLAGS=$(echo "$FPM_LDFLAGS" | sed 's/ -framework [^ ]*//g')
+
 echo "setup_env.sh: configured fpm for Python ${_WF_PY_VER} (${_WF_PY_ABS})"
 echo "  FPM_CFLAGS  = $FPM_CFLAGS"
 echo "  FPM_LDFLAGS = $FPM_LDFLAGS"

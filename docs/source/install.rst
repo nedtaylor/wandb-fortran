@@ -21,7 +21,7 @@ Prerequisites
 
     wandb login
 
-The code has been tested with Python 3.12, fpm 0.12.0, and wandb 0.25.0.
+The code has been tested with Python 3.12, fpm 0.13.0, and wandb 0.25.0.
 
 Getting the source
 ------------------
