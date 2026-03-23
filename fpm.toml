@@ -22,17 +22,16 @@ implicit-typing = false
 implicit-external = false
 source-form = "free"
 
-[[test]]
-name = "test_logging"
-source-dir = "test"
-main = "test_logging.f90"
+[preprocess]
+[preprocess.cpp]
+suffixes = ["F90"]
 
 [[example]]
 name = "athena_logging"
 source-dir = "example/athena_logging/src"
 main = "main.f90"
 [example.dependencies]
-athena = { git = "https://github.com/nedtaylor/athena", tag = "v2.0.0" }
+athena = { git = "https://github.com/nedtaylor/athena", branch = "flang-compatible" }
 
 [[example]]
 name = "neural_fortran_logging"
@@ -42,16 +41,27 @@ main = "main.f90"
 neural-fortran = { git = "https://github.com/modern-fortran/neural-fortran" }
 
 [[example]]
-name = "fiats_logging"
-source-dir = "example/fiats_logging/src"
-main = "main.f90"
-[example.dependencies]
-inference-engine = { git = "https://github.com/BerkeleyLab/fiats", tag = "0.14.0" }
-julienne = { git = "https://github.com/berkeleylab/julienne", tag = "1.3.1" }
-
-[[example]]
 name = "sweep"
 source-dir = "example/sweep/src"
 main = "main.f90"
 [example.dependencies]
-athena = { git = "https://github.com/nedtaylor/athena", tag = "v2.0.0" }
+athena = { git = "https://github.com/nedtaylor/athena", branch = "flang-compatible" }
+
+[features]
+fiats-gfortran.example = [
+	{ name = "fiats_logging", source-dir = "example/fiats_logging/src", main = "main.F90" },
+]
+fiats-gfortran.dependencies.inference-engine = { git = "https://github.com/BerkeleyLab/fiats", tag = "0.14.0" }
+fiats-gfortran.dependencies.julienne = { git = "https://github.com/berkeleylab/julienne", tag = "1.3.1" }
+fiats-gfortran.preprocess.cpp.macros = ["WF_FIATS_GFORTRAN"]
+
+fiats-flang.example = [
+	{ name = "fiats_logging", source-dir = "example/fiats_logging/src", main = "main.F90" },
+]
+fiats-flang.dependencies.fiats = { git = "https://github.com/BerkeleyLab/fiats", tag = "1.2.1" }
+fiats-flang.dependencies.julienne = { git = "https://github.com/berkeleylab/julienne", tag = "3.6.1" }
+fiats-flang.preprocess.cpp.macros = ["WF_FIATS_FLANG"]
+
+[profiles]
+fiats-gfortran = ["fiats-gfortran"]
+fiats-flang = ["fiats-flang"]

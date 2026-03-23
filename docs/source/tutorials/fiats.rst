@@ -100,24 +100,29 @@ using fiats:
 fpm dependency
 --------------
 
-The example pulls in fiats (``inference-engine``) and its helper library
-``julienne`` automatically via fpm:
-
-.. code-block:: toml
-
-    [[example]]
-    name = "fiats_logging"
-    source-dir = "example/fiats_logging/src"
-    main = "main.f90"
-    [example.dependencies]
-    inference-engine = { git = "https://github.com/BerkeleyLab/fiats", tag = "0.14.0" }
-    julienne = { git = "https://github.com/berkeleylab/julienne", tag = "1.3.1" }
-
 .. note::
 
-   Version 0.14.0 of fiats is used because it is the latest release with full
-   GNU Fortran (``gfortran``) support.  Later releases require ``flang-new``,
-   ``nagfor``, or ``ifx``.
+   Due to compiler compatibility requirements, the fiats example is disabled by default.
+   To enable building and running the fiats example, use the
+   ``--features fiats_gfortran`` or ``--features fiats_flang`` flag when running with fpm.
+   Due to conflicting julienne dependencies of the different fiats releases, a clean build
+   is required when switching between fiats_gfortran and fiats_flang features. This is
+   achieved by running ``fpm clean --all`` before building or running the example.
+
+To run the fiats example, use the ``fiats_gfortran`` or ``fiats_flang`` feature flag when running with fpm:
+
+.. code-block:: bash
+
+  fpm run --example fiats_logging --profile release --features fiats_gfortran
+
+
+or
+
+.. code-block:: bash
+
+  fpm run --example fiats_logging --profile release --features fiats_flang
+
+
 
 Framework-agnostic design
 --------------------------

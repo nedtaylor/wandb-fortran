@@ -21,9 +21,15 @@ program fiats_logging
   !!    fpm run --example fiats_logging --profile release
   !!    ```
   !!
+#ifdef WF_FIATS_FLANG
+  use fiats_m, only : &
+       trainable_network_t, tensor_t, input_output_pair_t, &
+       mini_batch_t, shuffle
+#else
   use inference_engine_m, only : &
        trainable_engine_t, tensor_t, input_output_pair_t, &
        mini_batch_t, shuffle, sigmoid_t
+#endif
   use julienne_m, only : string_t, bin_t
   use wf
 
@@ -43,7 +49,11 @@ program fiats_logging
   !-----------------------------------------------------------------------------
   ! network and data
   !-----------------------------------------------------------------------------
+#ifdef WF_FIATS_FLANG
+  type(trainable_network_t) :: net
+#else
   type(trainable_engine_t) :: net
+#endif
   type(tensor_t), allocatable :: val_inputs(:), val_outputs(:)
   type(input_output_pair_t), allocatable :: pairs(:)
   type(mini_batch_t), allocatable :: mini_batches(:)
@@ -154,7 +164,12 @@ contains
   function build_network() result(engine)
     !! Build a trainable network with architecture [1, num_hidden, 1]
     !! using sigmoid activation and small random weights.
+#ifdef WF_FIATS_FLANG
+    type(trainable_network_t) :: engine
+    type(string_t), allocatable :: metadata(:)
+#else
     type(trainable_engine_t) :: engine
+#endif
     integer, parameter :: nodes(*) = [1, 16, 1]
     integer, parameter :: n_max = maxval(nodes), layers = size(nodes)
     real, allocatable :: w(:,:,:), b_(:,:)
@@ -166,12 +181,24 @@ contains
     w  = (w  - 0.5) * 0.2
     b_ = (b_ - 0.5) * 0.2
 
+#ifdef WF_FIATS_FLANG
+    allocate(metadata(5))
+    metadata(1) = string_t("sine-approx")
+    metadata(2) = string_t("wandb-fortran")
+    metadata(3) = string_t("2026-03-22")
+    metadata(4) = string_t("sigmoid")
+    metadata(5) = string_t("false")
+
+    engine = trainable_network_t( &
+         metadata=metadata, weights=w, biases=b_, nodes=nodes)
+#else
     engine = trainable_engine_t( &
          nodes = nodes, weights = w, biases = b_, &
          differentiable_activation_strategy = sigmoid_t(), &
          metadata = [string_t("sine-approx"),    string_t("wandb-fortran"), &
               string_t("2026-03-22"),     string_t("sigmoid"),       &
               string_t("false")] )
+#endif
   end function
 
   subroutine build_training_data()

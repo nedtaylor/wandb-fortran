@@ -1,6 +1,6 @@
 [![MIT workflow](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/license/mit/ "View MIT license")
 [![Documentation Status](https://readthedocs.org/projects/athena/badge/?version=latest)](https://wandb-fortran.readthedocs.io/en/latest/?badge=latest "athena ReadTheDocs")
-[![FPM](https://img.shields.io/badge/fpm-0.12.0-purple)](https://github.com/fortran-lang/fpm "View Fortran Package Manager")
+[![FPM](https://img.shields.io/badge/fpm-0.13.0-purple)](https://github.com/fortran-lang/fpm "View Fortran Package Manager")
 [![GCC compatibility](https://img.shields.io/badge/gcc-15.2.0-green)](https://gcc.gnu.org/gcc-13/ "View GCC")
 
 # wandb-fortran
@@ -85,7 +85,7 @@ The library has the following dependencies:
 | Requirement | Version |
 |-------------|---------|
 | gfortran (or compatible) | ≥ 13 |
-| [fpm](https://fpm.fortran-lang.org) | ≥ 0.12 |
+| [fpm](https://fpm.fortran-lang.org) | ≥ 0.13 |
 | Python + dev headers | ≥ 3.8 |
 | wandb Python package | ≥ 0.25 |
 
@@ -118,12 +118,16 @@ Next, the Python flags and paths will need to be configured such that the curren
 Source the `setup_env.sh` script (note, this requires using the `source` command, not just executing it):
 
 ```bash
+# If you use conda or a virtualenv, activate it first.
+conda activate my_env
 source tools/setup_env.sh
 
-# Or with a specific interpreter (e.g. conda):
+# Or force a specific interpreter explicitly.
 PYTHON=/opt/homebrew/Caskroom/miniconda/base/envs/my_env/bin/python \
     source tools/setup_env.sh
 ```
+
+When a conda environment or virtualenv is active, `setup_env.sh` now prefers that environment's `python` automatically.
 
 ### Building with fpm
 

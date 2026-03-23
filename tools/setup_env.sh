@@ -4,7 +4,7 @@
 #
 # SOURCE this file — do not execute it:
 #   source tools/setup_env.sh
-#   PYTHON=/path/to/python3 source tools/setup_env.sh
+#   PYTHON=/path/to/python source tools/setup_env.sh
 #
 # After sourcing you can run fpm directly:
 #   fpm build
@@ -18,10 +18,32 @@
 # Use return (not exit) so the file is safe to source from interactive shells.
 _wf_err() { echo "ERROR (setup_env.sh): $*" >&2; return 1 2>/dev/null || exit 1; }
 
+_wf_save_original_env() {
+    if [[ -z "${_WF_ORIG_FPM_CFLAGS+x}" ]]; then
+        export _WF_ORIG_FPM_CFLAGS="${FPM_CFLAGS:-}"
+    fi
+    if [[ -z "${_WF_ORIG_FPM_LDFLAGS+x}" ]]; then
+        export _WF_ORIG_FPM_LDFLAGS="${FPM_LDFLAGS:-}"
+    fi
+    if [[ -z "${_WF_ORIG_DYLD_LIBRARY_PATH+x}" ]]; then
+        export _WF_ORIG_DYLD_LIBRARY_PATH="${DYLD_LIBRARY_PATH:-}"
+    fi
+}
+
 # --------------------------------------------------------------------------- #
 #  Resolve Python interpreter                                                  #
 # --------------------------------------------------------------------------- #
-_WF_PY="${PYTHON:-python3}"
+if [[ -n "${PYTHON:-}" ]]; then
+    _WF_PY="${PYTHON}"
+elif [[ -n "${CONDA_PREFIX:-}" && -x "${CONDA_PREFIX}/bin/python" ]]; then
+    _WF_PY="${CONDA_PREFIX}/bin/python"
+elif [[ -n "${VIRTUAL_ENV:-}" && -x "${VIRTUAL_ENV}/bin/python" ]]; then
+    _WF_PY="${VIRTUAL_ENV}/bin/python"
+elif command -v python &>/dev/null; then
+    _WF_PY="python"
+else
+    _WF_PY="python3"
+fi
 
 if ! command -v "$_WF_PY" &>/dev/null; then
     _wf_err "Python interpreter '$_WF_PY' not found."
@@ -31,8 +53,11 @@ _WF_PY_ABS=$(command -v "$_WF_PY")
 _WF_PY_VER=$("$_WF_PY_ABS" -c \
     "import sys; print(f'{sys.version_info.major}.{sys.version_info.minor}')")
 _WF_PY_DIR=$(dirname "$_WF_PY_ABS")
+_WF_PY_PREFIX=$("$_WF_PY_ABS" -c "import sys; print(sys.prefix)")
+_WF_PY_PURELIB=$("$_WF_PY_ABS" -c "import sysconfig; print(sysconfig.get_path('purelib') or '')")
+_WF_PY_PLATLIB=$("$_WF_PY_ABS" -c "import sysconfig; print(sysconfig.get_path('platlib') or '')")
 
-# Prefer the versioned python-config (python3.12-config) alongside the interpreter.
+# Prefer the versioned python-config alongside the interpreter.
 _WF_PY_CFG="${_WF_PY_DIR}/python${_WF_PY_VER}-config"
 [[ -x "$_WF_PY_CFG" ]] || _WF_PY_CFG="${_WF_PY_DIR}/python3-config"
 
@@ -44,31 +69,45 @@ fi
 # --------------------------------------------------------------------------- #
 #  Derive flags                                                                #
 # --------------------------------------------------------------------------- #
+_wf_save_original_env
+
 _WF_INCLUDES=$("$_WF_PY_CFG" --includes)
 _WF_LDFLAGS=$("$_WF_PY_CFG" --ldflags --embed 2>/dev/null \
               || "$_WF_PY_CFG" --ldflags)
 
 # python-config's -L often points only to config-X.Y-darwin/, not the directory
-# that holds the actual libpython dylib.  Prepend the real LIBDIR and bake in
+# that holds the actual libpython dylib. Prepend the real LIBDIR and bake in
 # an rpath so the binary finds the dylib without DYLD_LIBRARY_PATH at runtime.
 _WF_LIBDIR=$("$_WF_PY_ABS" -c \
     "import sysconfig; print(sysconfig.get_config_var('LIBDIR'))")
 if [[ -n "$_WF_LIBDIR" ]]; then
     _WF_LDFLAGS="-L${_WF_LIBDIR} -Wl,-rpath,${_WF_LIBDIR} ${_WF_LDFLAGS}"
-    # Also keep DYLD_LIBRARY_PATH so existing cached binaries can find the dylib
-    # without a forced relink.
-    export DYLD_LIBRARY_PATH="${_WF_LIBDIR}${DYLD_LIBRARY_PATH:+:$DYLD_LIBRARY_PATH}"
+    export DYLD_LIBRARY_PATH="${_WF_LIBDIR}${_WF_ORIG_DYLD_LIBRARY_PATH:+:${_WF_ORIG_DYLD_LIBRARY_PATH}}"
+fi
+
+_WF_PY_PATH="$_WF_PY_PURELIB"
+if [[ -n "$_WF_PY_PLATLIB" && "$_WF_PY_PLATLIB" != "$_WF_PY_PURELIB" ]]; then
+    _WF_PY_PATH="${_WF_PY_PATH:+${_WF_PY_PATH}:}${_WF_PY_PLATLIB}"
 fi
 
 # --------------------------------------------------------------------------- #
 #  Export                                                                      #
 # --------------------------------------------------------------------------- #
-export FPM_CFLAGS="${FPM_CFLAGS:-} ${_WF_INCLUDES}"
-export FPM_LDFLAGS="${FPM_LDFLAGS:-} ${_WF_LDFLAGS}"
+export FPM_CFLAGS="${_WF_ORIG_FPM_CFLAGS}${_WF_ORIG_FPM_CFLAGS:+ }${_WF_INCLUDES}"
+export FPM_LDFLAGS="${_WF_ORIG_FPM_LDFLAGS}${_WF_ORIG_FPM_LDFLAGS:+ }${_WF_LDFLAGS}"
+
+# Filter out -framework flags which are not supported by flang.
+export FPM_LDFLAGS=$(echo "$FPM_LDFLAGS" | sed 's/ -framework [^ ]*//g')
+
+export WF_PYTHON_BIN="$_WF_PY_ABS"
+export WF_PYTHON_HOME="$_WF_PY_PREFIX"
+export WF_PYTHON_PATH="$_WF_PY_PATH"
 
 echo "setup_env.sh: configured fpm for Python ${_WF_PY_VER} (${_WF_PY_ABS})"
 echo "  FPM_CFLAGS  = $FPM_CFLAGS"
 echo "  FPM_LDFLAGS = $FPM_LDFLAGS"
+echo "  WF_PYTHON_HOME = $WF_PYTHON_HOME"
+echo "  WF_PYTHON_PATH = $WF_PYTHON_PATH"
 echo ""
 echo "You can now run:  fpm build"
 
@@ -76,4 +115,6 @@ echo "You can now run:  fpm build"
 #  Tidy up — don't leak private variables into the caller's shell              #
 # --------------------------------------------------------------------------- #
 unset _WF_PY _WF_PY_ABS _WF_PY_VER _WF_PY_DIR
-unset _WF_PY_CFG _WF_INCLUDES _WF_LDFLAGS _WF_LIBDIR
+unset _WF_PY_CFG _WF_PY_PREFIX _WF_PY_PURELIB _WF_PY_PLATLIB _WF_PY_PATH
+unset _WF_INCLUDES _WF_LDFLAGS _WF_LIBDIR
+unset -f _wf_save_original_env
