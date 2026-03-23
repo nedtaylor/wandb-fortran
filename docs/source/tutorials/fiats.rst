@@ -111,15 +111,17 @@ fpm dependency
 
 To run the fiats example, use the ``fiats_gfortran`` or ``fiats_flang`` feature flag when running with fpm:
 
-```bash
-fpm run --example fiats_logging --profile release --features fiats_gfortran
-```
+.. code-block:: bash
+
+  fpm run --example fiats_logging --profile release --features fiats_gfortran
+
 
 or
 
-```bash
-fpm run --example fiats_logging --profile release --features fiats_flang
-```
+.. code-block:: bash
+
+  fpm run --example fiats_logging --profile release --features fiats_flang
+
 
 
 Framework-agnostic design
