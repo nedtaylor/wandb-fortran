@@ -118,12 +118,16 @@ Next, the Python flags and paths will need to be configured such that the curren
 Source the `setup_env.sh` script (note, this requires using the `source` command, not just executing it):
 
 ```bash
+# If you use conda or a virtualenv, activate it first.
+conda activate my_env
 source tools/setup_env.sh
 
-# Or with a specific interpreter (e.g. conda):
+# Or force a specific interpreter explicitly.
 PYTHON=/opt/homebrew/Caskroom/miniconda/base/envs/my_env/bin/python \
     source tools/setup_env.sh
 ```
+
+When a conda environment or virtualenv is active, `setup_env.sh` now prefers that environment's `python` automatically.
 
 ### Building with fpm
 

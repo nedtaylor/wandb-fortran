@@ -39,12 +39,16 @@ Before building you must export the Python compile and link flags so that
 
 .. code-block:: bash
 
-    # Use the Python on your PATH
+    # If you use conda or a virtualenv, activate it first.
+    conda activate my_env
     source tools/setup_env.sh
 
-    # Or specify a conda / venv interpreter explicitly
+    # Or specify a conda / venv interpreter explicitly.
     PYTHON=/opt/homebrew/Caskroom/miniconda/base/envs/my_env/bin/python \
         source tools/setup_env.sh
+
+When a conda environment or virtualenv is active, ``setup_env.sh`` prefers
+that environment's ``python`` automatically.
 
 This sets ``FPM_CFLAGS``, ``FPM_LDFLAGS``, and (on macOS) ``DYLD_LIBRARY_PATH``.
 

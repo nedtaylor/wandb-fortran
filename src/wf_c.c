@@ -13,8 +13,10 @@
 
 /* Python.h must come before any standard headers on some platforms. */
 #include <Python.h>
+#include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <wchar.h>
 
 /* ------------------------------------------------------------------ */
 /*  Module-level state                                                 */
@@ -41,6 +43,160 @@ static void print_py_error(const char *ctx)
 
 
 /* ------------------------------------------------------------------ */
+/*  Helper: add runtime site-packages from WF_PYTHON_PATH.             */
+/* ------------------------------------------------------------------ */
+static void configure_python_sys_path(void)
+{
+    const char *python_path = getenv("WF_PYTHON_PATH");
+    PyObject   *sys_path    = NULL;
+    char       *paths_copy  = NULL;
+    char       *cursor      = NULL;
+    char       *entry       = NULL;
+
+    if (!python_path || python_path[0] == '\0') {
+        return;
+    }
+
+    sys_path = PySys_GetObject("path");
+    if (!sys_path || !PyList_Check(sys_path)) {
+        fprintf(stderr,
+                "[wandb_c] WARNING: unable to access sys.path for WF_PYTHON_PATH.\n");
+        return;
+    }
+
+    paths_copy = strdup(python_path);
+    if (!paths_copy) {
+        fprintf(stderr, "[wandb_c] WARNING: failed to copy WF_PYTHON_PATH.\n");
+        return;
+    }
+
+    cursor = paths_copy;
+    while ((entry = strsep(&cursor, ":")) != NULL) {
+        PyObject *py_entry = NULL;
+        int       contains = 0;
+
+        if (entry[0] == '\0') {
+            continue;
+        }
+
+        py_entry = PyUnicode_FromString(entry);
+        if (!py_entry) {
+            print_py_error("PyUnicode_FromString(sys.path entry)");
+            continue;
+        }
+
+        contains = PySequence_Contains(sys_path, py_entry);
+        if (contains == 0) {
+            if (PyList_Append(sys_path, py_entry) != 0) {
+                print_py_error("PyList_Append(sys.path)");
+            }
+        } else if (contains < 0) {
+            print_py_error("PySequence_Contains(sys.path)");
+        }
+
+        Py_DECREF(py_entry);
+    }
+
+    free(paths_copy);
+}
+
+
+/* ------------------------------------------------------------------ */
+/*  Helper: start Python using the interpreter selected by setup_env.  */
+/* ------------------------------------------------------------------ */
+static int ensure_python_started(void)
+{
+    const char *python_bin  = getenv("WF_PYTHON_BIN");
+    const char *python_home = getenv("WF_PYTHON_HOME");
+    PyConfig    config;
+    PyStatus    status;
+    wchar_t    *program_name = NULL;
+    wchar_t    *home         = NULL;
+    int         used_config  = 0;
+
+    if (python_started) {
+        return 0;
+    }
+
+    if ((!python_bin || python_bin[0] == '\0') &&
+        (!python_home || python_home[0] == '\0')) {
+        Py_Initialize();
+    } else {
+        PyConfig_InitPythonConfig(&config);
+        used_config = 1;
+        config.parse_argv = 0;
+
+        if (python_bin && python_bin[0] != '\0') {
+            program_name = Py_DecodeLocale(python_bin, NULL);
+            if (!program_name) {
+                fprintf(stderr,
+                        "[wandb_c] Failed to decode WF_PYTHON_BIN.\n");
+                PyConfig_Clear(&config);
+                return -1;
+            }
+            status = PyConfig_SetString(&config, &config.program_name, program_name);
+            if (PyStatus_Exception(status)) {
+                fprintf(stderr,
+                        "[wandb_c] Failed to configure Python program name: %s\n",
+                        status.err_msg ? status.err_msg : "unknown error");
+                PyMem_RawFree(program_name);
+                PyConfig_Clear(&config);
+                return -1;
+            }
+        }
+
+        if (python_home && python_home[0] != '\0') {
+            home = Py_DecodeLocale(python_home, NULL);
+            if (!home) {
+                fprintf(stderr,
+                        "[wandb_c] Failed to decode WF_PYTHON_HOME.\n");
+                PyMem_RawFree(program_name);
+                PyConfig_Clear(&config);
+                return -1;
+            }
+            status = PyConfig_SetString(&config, &config.home, home);
+            if (PyStatus_Exception(status)) {
+                fprintf(stderr,
+                        "[wandb_c] Failed to configure Python home: %s\n",
+                        status.err_msg ? status.err_msg : "unknown error");
+                PyMem_RawFree(program_name);
+                PyMem_RawFree(home);
+                PyConfig_Clear(&config);
+                return -1;
+            }
+        }
+
+        status = Py_InitializeFromConfig(&config);
+        if (PyStatus_Exception(status)) {
+            fprintf(stderr,
+                    "[wandb_c] Failed to initialise the Python interpreter: %s\n",
+                    status.err_msg ? status.err_msg : "unknown error");
+            PyMem_RawFree(program_name);
+            PyMem_RawFree(home);
+            PyConfig_Clear(&config);
+            return -1;
+        }
+    }
+
+    if (used_config) {
+        PyMem_RawFree(program_name);
+        PyMem_RawFree(home);
+        PyConfig_Clear(&config);
+    }
+
+    if (!Py_IsInitialized()) {
+        fprintf(stderr,
+                "[wandb_c] Failed to initialise the Python interpreter.\n");
+        return -1;
+    }
+
+    python_started = 1;
+    configure_python_sys_path();
+    return 0;
+}
+
+
+/* ------------------------------------------------------------------ */
 /*  wandb_init_c                                                       */
 /* ------------------------------------------------------------------ */
 int wandb_init_c(const char *project, const char *name,
@@ -53,13 +209,9 @@ int wandb_init_c(const char *project, const char *name,
 
     /* Start the interpreter if needed. */
     if (!python_started) {
-        Py_Initialize();
-        if (!Py_IsInitialized()) {
-            fprintf(stderr,
-                    "[wandb_c] Failed to initialise the Python interpreter.\n");
+        if (ensure_python_started() != 0) {
             return -1;
         }
-        python_started = 1;
     }
 
     /* If a sweep_id was supplied, set WANDB_SWEEP_ID so that wandb.init()
@@ -447,13 +599,9 @@ int wandb_sweep_c(const char *config_json,
 
     /* Ensure Python + wandb are initialised (reuse wandb_init path). */
     if (!python_started) {
-        Py_Initialize();
-        if (!Py_IsInitialized()) {
-            fprintf(stderr,
-                    "[wandb_c] Failed to initialise the Python interpreter.\n");
+        if (ensure_python_started() != 0) {
             return -1;
         }
-        python_started = 1;
     }
     if (!wandb_module) {
         wandb_module = PyImport_ImportModule("wandb");
